@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.env
+.venv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data and cache
+data/hf_cache/
+results/checkpoints/
+results/*.png
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+nohup.out
