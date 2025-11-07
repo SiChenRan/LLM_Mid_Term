@@ -32,7 +32,7 @@ class MultiHeadAttention(nn.Module):
         bias: bool = True,
     ):
         super().__init__()
-        assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
+        assert d_model % num_heads == 0, "d_model必须能被num_heads整除"
         self.d_model = d_model
         self.h = num_heads
         self.d_k = d_model // num_heads
