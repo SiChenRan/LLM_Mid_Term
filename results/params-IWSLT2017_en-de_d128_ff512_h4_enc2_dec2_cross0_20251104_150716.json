@@ -1,0 +1,14 @@
+{
+  "seq2seq": {
+    "total": 997818,
+    "trainable": 997818
+  },
+  "config": {
+    "d_model": 128,
+    "d_ff": 512,
+    "num_heads": 4,
+    "enc_layers": 2,
+    "dec_layers": 2,
+    "use_cross_attn": false
+  }
+}

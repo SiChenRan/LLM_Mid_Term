@@ -90,3 +90,92 @@ class WikiText2Dataset(Dataset):
         chunk = self.data[idx:idx + self.seq_len + 1]
         return chunk[:-1], chunk[1:]
 
+
+class IWSLT2017Seq2Seq(Dataset):
+    """
+    使用本地 data/IWSLT2017_EN_DE/<split>/*.arrow 读取 IWSLT2017 EN↔DE 数据，生成字符级
+    (src, tgt_in, tgt_out) 三元组，用于 Encoder-Decoder 训练。
+
+    - 默认方向 en→de，可通过 src_lang/tgt_lang 指定；
+    - vocab 共享（包含 src 与 tgt 的字符以及 PAD/BOS/EOS 特殊符号）；
+    - 目标序列添加 BOS/EOS：tgt_in=[BOS]+tgt_ids, tgt_out=tgt_ids+[EOS]；
+    - 不在此处 padding，交由 DataLoader 的 collate_fn 处理。
+    """
+    def __init__(
+        self,
+        split: str = "train",
+        root: str | None = None,
+        seq_len: int = 128,
+        tokenizer: dict | None = None,
+        src_lang: str = "en",
+        tgt_lang: str = "de",
+        bos_token: str = "<BOS>",
+        eos_token: str = "<EOS>",
+        pad_token: str = "<PAD>",
+    ):
+        # 记录数据集标识与方向，便于文件命名
+        self.dataset_name = "IWSLT2017"
+        self.src_lang = src_lang
+        self.tgt_lang = tgt_lang
+        if root is None:
+            root = os.path.join(".", "data", "IWSLT2017_EN_DE")
+        split_dir = os.path.join(root, split)
+        if not os.path.isdir(split_dir):
+            raise RuntimeError(f"IWSLT2017Seq2Seq: 未找到 split 目录: {split_dir}")
+
+        arrow_candidates = glob.glob(os.path.join(split_dir, "*.arrow"))
+        if not arrow_candidates:
+            raise RuntimeError(f"IWSLT2017Seq2Seq: 未在 {split_dir} 找到 Arrow 文件")
+        ds = HFDataset.from_file(arrow_candidates[0])
+
+        col = "translation"
+        if col not in ds.column_names:
+            raise RuntimeError(f"IWSLT2017Seq2Seq: Arrow 文件中缺少列 '{col}'，实际列: {ds.column_names}")
+
+        src_texts, tgt_texts = [], []
+        for ex in ds:
+            tr = ex[col]
+            s = tr.get(src_lang, "")
+            t = tr.get(tgt_lang, "")
+            if not isinstance(s, str) or not isinstance(t, str):
+                continue
+            src_texts.append(s)
+            tgt_texts.append(t)
+
+        # 构建或沿用 tokenizer（字符级，含特殊符号）
+        if tokenizer is None:
+            vocab_chars = set()
+            for txt in src_texts:
+                vocab_chars.update(list(txt))
+            for txt in tgt_texts:
+                vocab_chars.update(list(txt))
+            vocab = [pad_token, bos_token, eos_token] + sorted(vocab_chars)
+            self.stoi = {ch: i for i, ch in enumerate(vocab)}
+            self.itos = {i: ch for ch, i in self.stoi.items()}
+        else:
+            self.stoi, self.itos = tokenizer["stoi"], tokenizer["itos"]
+
+        self.pad_id = self.stoi.get(pad_token, 0)
+        self.bos_id = self.stoi[bos_token]
+        self.eos_id = self.stoi[eos_token]
+        self.seq_len = seq_len
+        self.vocab_size = len(self.stoi)
+
+        def encode(text: str):
+            return [self.stoi.get(ch, self.pad_id) for ch in text]
+
+        self.samples = []
+        for s, t in zip(src_texts, tgt_texts):
+            src_ids = encode(s)[:seq_len]
+            # 目标预留 BOS/EOS，至少保留 1 个 token
+            tgt_ids = encode(t)[:max(1, seq_len - 2)]
+            tgt_in = [self.bos_id] + tgt_ids
+            tgt_out = tgt_ids + [self.eos_id]
+            self.samples.append((torch.tensor(src_ids), torch.tensor(tgt_in), torch.tensor(tgt_out)))
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        return self.samples[idx]
+

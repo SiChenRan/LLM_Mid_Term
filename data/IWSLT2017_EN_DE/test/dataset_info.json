@@ -1,0 +1,61 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "parquet",
+  "dataset_size": 44427829,
+  "description": "",
+  "download_checksums": {
+    "https://hf-mirror.com/datasets/IWSLT/iwslt2017/resolve/refs%2Fconvert%2Fparquet/iwslt2017-en-de/train/0000.parquet": {
+      "num_bytes": 26415796,
+      "checksum": null
+    },
+    "https://hf-mirror.com/datasets/IWSLT/iwslt2017/resolve/refs%2Fconvert%2Fparquet/iwslt2017-en-de/validation/0000.parquet": {
+      "num_bytes": 132162,
+      "checksum": null
+    },
+    "https://hf-mirror.com/datasets/IWSLT/iwslt2017/resolve/refs%2Fconvert%2Fparquet/iwslt2017-en-de/test/0000.parquet": {
+      "num_bytes": 1002104,
+      "checksum": null
+    }
+  },
+  "download_size": 27550062,
+  "features": {
+    "translation": {
+      "languages": [
+        "en",
+        "de"
+      ],
+      "_type": "Translation"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 71977891,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 42608380,
+      "num_examples": 206112,
+      "dataset_name": "parquet"
+    },
+    "validation": {
+      "name": "validation",
+      "num_bytes": 210975,
+      "num_examples": 888,
+      "dataset_name": "parquet"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 1608474,
+      "num_examples": 8079,
+      "dataset_name": "parquet"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
